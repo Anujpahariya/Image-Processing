@@ -1,0 +1,64 @@
+clear all
+vid=videoinput('winvideo',1);
+start(vid);
+im=getsnapshot(vid);
+stop(vid);
+
+rcolor=im(:,:,1);
+gcolor=im(:,:,2);
+bcolor=im(:,:,3);
+
+
+%imshow(im)
+diff_imr=imsubtract(rcolor,rgb2gray(im));
+diff_imr=medfilt2(diff_imr,[3 3]);
+diff_imr=im2bw(diff_imr, 0.18);
+diff_imr=bwareaopen(diff_imr,300);
+bwr=bwlabel(diff_imr,8);
+statsr=regionprops(bwr,'BoundingBox','Centroid');
+figure,imshow(diff_imr)
+hold on
+    for object = 1:length(statsr)
+        bbr = statsr(object).BoundingBox;
+        bcr = statsr(object).Centroid;
+        rectangle('Position',bbr,'EdgeColor','r','LineWidth',2)
+        plot(bcr(1),bcr(2), '-m+')
+        a=text(bcr(1)+15,bcr(2), strcat('X: ', num2str(round(bcr(1))), '    Y: ', num2str(round(bcr(2)))));
+        set(a, 'FontName', 'Arial', 'FontWeight', 'bold', 'FontSize', 12, 'Color', 'red');
+    end
+hold off
+x= 0.071*bcr(1)
+y = 0.067*bcr(2)
+theta = atand(y/x);
+sqd=(x.^2 + y.^2);
+distance = sqrt(sqd)
+t1=theta*22.8;
+t2=(distance-11.5)*208.9;
+
+a = arduino()
+configurePin(a,'D7','pullup')
+configurePin(a,'D8','pullup')
+%angle
+configurePin(a,'D5','pullup')
+configurePin(a,'D6','Unset')
+configurePin(a,'D9','Unset')
+configurePin(a,'D10','pullup')
+pause(t1.*0.001);
+configurePin(a,'D5','Unset')
+configurePin(a,'D6','Unset')
+configurePin(a,'D9','Unset')
+configurePin(a,'D10','Unset')
+pause(1);
+%distance
+configurePin(a,'D5','pullup')
+configurePin(a,'D6','Unset')
+configurePin(a,'D9','pullup')
+configurePin(a,'D10','Unset')
+pause(t2.*0.001);
+configurePin(a,'D5','Unset')
+configurePin(a,'D6','Unset')
+configurePin(a,'D9','Unset')
+configurePin(a,'D10','Unset')
+
+
+
